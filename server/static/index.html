@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predictor AI | FSBM</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Modern typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --surface: rgba(30, 41, 59, 0.7);
+            --surface-border: rgba(255, 255, 255, 0.1);
+            --primary: #8b5cf6;
+            --primary-hover: #7c3aed;
+            --secondary: #06b6d4;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --danger: #ef4444;
+            --success: #10b981;
+            --input-bg: rgba(15, 23, 42, 0.6);
+            --input-border: rgba(255, 255, 255, 0.15);
+            --input-focus: #8b5cf6;
+            --glow: 0 0 20px rgba(139, 92, 246, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+            overflow-x: hidden;
+            background-image:
+                radial-gradient(circle at 15% 50%, rgba(139, 92, 246, 0.15), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(6, 182, 212, 0.15), transparent 25%);
+        }
+
+        /* Animated Mesh Gradient Background */
+        .mesh-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            overflow: hidden;
+            background: #0f172a;
+        }
+
+        .mesh-blob {
+            position: absolute;
+            filter: blur(90px);
+            opacity: 0.5;
+            animation: float 20s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 50%;
+        }
+
+        .mesh-1 {
+            top: -10%;
+            left: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, #4c1d95 0%, transparent 70%);
+            animation-duration: 25s;
+        }
+
+        .mesh-2 {
+            bottom: -20%;
+            right: -10%;
+            width: 60vw;
+            height: 60vw;
+            background: radial-gradient(circle, #0891b2 0%, transparent 70%);
+            animation-duration: 30s;
+            animation-delay: -5s;
+        }
+
+        .mesh-3 {
+            top: 40%;
+            left: 40%;
+            width: 40vw;
+            height: 40vw;
+            background: radial-gradient(circle, #7e22ce 0%, transparent 70%);
+            animation-duration: 22s;
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            33% {
+                transform: translate(5%, 5%) scale(1.05);
+            }
+
+            66% {
+                transform: translate(-2%, 8%) scale(0.95);
+            }
+
+            100% {
+                transform: translate(-5%, -5%) scale(1);
+            }
+        }
+
+        .container {
+            width: 100%;
+            max-width: 540px;
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--surface-border);
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            z-index: 1;
+            position: relative;
+            transform: translateY(0);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1), var(--glow);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: rgba(139, 92, 246, 0.15);
+            color: #c4b5fd;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .header h1 {
+            font-weight: 800;
+            font-size: 2.5rem;
+            line-height: 1.2;
+            background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            font-weight: 300;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        .form-group {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            transition: color 0.3s;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.875rem 1.25rem;
+            border-radius: 12px;
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
+            color: var(--text-main);
+            font-size: 1rem;
+            font-weight: 400;
+            outline: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            appearance: none;
+        }
+
+        .form-control:focus {
+            background: rgba(30, 41, 59, 0.8);
+            border-color: var(--input-focus);
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15);
+        }
+
+        .form-group:focus-within label {
+            color: #c4b5fd;
+        }
+
+        select.form-control {
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1.25rem center;
+            background-size: 1.2em;
+            padding-right: 2.5rem;
+            cursor: pointer;
+        }
+
+        select.form-control option {
+            background: var(--bg-color);
+            color: var(--text-main);
+            padding: 10px;
+        }
+
+        .form-actions {
+            grid-column: span 2;
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .submit-btn {
+            flex: 1;
+            padding: 1.125rem;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+            box-shadow: 0 10px 20px -10px rgba(139, 92, 246, 0.5);
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px -10px rgba(139, 92, 246, 0.6), 0 0 15px rgba(6, 182, 212, 0.4);
+        }
+
+        .submit-btn:hover::before {
+            left: 100%;
+        }
+
+        .submit-btn:active {
+            transform: translateY(1px);
+        }
+
+        /* Result Section */
+        .result-card {
+            margin-top: 2rem;
+            padding: 2rem;
+            border-radius: 16px;
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9));
+            text-align: center;
+            display: none;
+            opacity: 0;
+            transform: scale(0.95) translateY(10px);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent 0deg, rgba(6, 182, 212, 0.1) 90deg, transparent 180deg);
+            animation: rotateBG 4s linear infinite;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        @keyframes rotateBG {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .result-card.show {
+            display: block;
+            animation: popIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes popIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.95) translateY(20px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .result-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .result-title {
+            color: var(--secondary);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+
+        .result-value {
+            font-size: 3.2rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #fff, #a5b4fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(139, 92, 246, 0.3);
+            line-height: 1.1;
+        }
+
+        .tree-loader {
+            display: none;
+            justify-content: center;
+            gap: 8px;
+            font-size: 1.5rem;
+            line-height: 1;
+        }
+
+        .tree {
+            animation: grow 0.6s infinite alternate;
+        }
+
+        .t1 {
+            animation-delay: 0s;
+        }
+
+        .t2 {
+            animation-delay: 0.2s;
+        }
+
+        .t3 {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes grow {
+            0% {
+                transform: scale(0.8) translateY(2px);
+                opacity: 0.7;
+            }
+
+            100% {
+                transform: scale(1.2) translateY(-2px);
+                opacity: 1;
+            }
+        }
+
+        .tooltip {
+            margin-left: 0.5rem;
+            cursor: help;
+            position: relative;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .tooltip:hover {
+            opacity: 1;
+        }
+
+        .tooltip::after {
+            content: attr(data-tip);
+            position: absolute;
+            bottom: 150%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.95);
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            color: white;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .tooltip:hover::after {
+            opacity: 1;
+            visibility: visible;
+            bottom: 130%;
+        }
+
+        .reset-btn {
+            padding: 0 1.5rem;
+            border: 1px solid var(--input-border);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-muted);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .reset-btn:hover {
+            color: white;
+            background: rgba(239, 68, 68, 0.8);
+            border-color: rgba(239, 68, 68, 0.8);
+        }
+
+        .copy-btn {
+            margin-top: 1.5rem;
+            padding: 0.6rem 1.2rem;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 8px;
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .copy-btn:hover {
+            background: rgba(139, 92, 246, 0.25);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .error-msg {
+            grid-column: span 2;
+            color: #fca5a5;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .error-msg::before {
+            content: "⚠️";
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .container {
+                padding: 2rem 1.5rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group.full-width {
+                grid-column: span 1;
+            }
+
+            .submit-btn {
+                grid-column: span 1;
+            }
+
+            .error-msg {
+                grid-column: span 1;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .result-value {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="mesh-bg">
+        <div class="mesh-blob mesh-1"></div>
+        <div class="mesh-blob mesh-2"></div>
+        <div class="mesh-blob mesh-3"></div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <div class="badge">IA Random Forest</div>
+            <h1>Salary Predictor</h1>
+            <p>Intelligence Artificielle développée pour FSBM</p>
+        </div>
+
+        <form id="predictForm" class="form-grid">
+            <div class="form-group">
+                <label for="age">Âge</label>
+                <input type="number" id="age" class="form-control" name="age" min="18" max="75" value="30" required>
+            </div>
+
+            <div class="form-group">
+                <label for="years_of_experience">Expérience (Années) <span class="tooltip"
+                        data-tip="Senior = 5+ ans d'expérience">ℹ️</span></label>
+                <input type="number" step="0.5" id="years_of_experience" class="form-control" name="years_of_experience"
+                    min="0" max="50" value="5" required>
+            </div>
+
+            <div class="form-group full-width">
+                <label for="job_title">Intitulé du poste</label>
+                <select id="job_title" class="form-control" name="job_title" required>
+                    <option value="" disabled>Chargement des métiers...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="education_level">Niveau d'études</label>
+                <select id="education_level" class="form-control" name="education_level" required>
+                    <option value="" disabled>Chargement...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="gender">Genre</label>
+                <select id="gender" class="form-control" name="gender" required>
+                    <option value="" disabled>Chargement...</option>
+                </select>
+            </div>
+
+            <div class="form-group full-width">
+                <label for="currency">Devise d'affichage</label>
+                <select id="currency" class="form-control">
+                    <option value="MAD" selected>Dirham Marocain (MAD)</option>
+                    <option value="USD">Dollar Américain (USD)</option>
+                    <option value="EUR">Euro (EUR)</option>
+                </select>
+            </div>
+
+            <div id="errorBox" class="error-msg"></div>
+
+            <div class="form-actions">
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <span id="btnText">Estimer le Salaire</span>
+                    <div class="tree-loader" id="btnLoader">
+                        <span class="tree t1">🌱</span>
+                        <span class="tree t2">🌲</span>
+                        <span class="tree t3">🌳</span>
+                    </div>
+                </button>
+                <button type="reset" class="reset-btn" id="resetBtn">Réinitialiser</button>
+            </div>
+        </form>
+
+        <div class="result-card" id="resultCard">
+            <div class="result-content">
+                <div class="result-title">Salaire Annuel Estimé</div>
+                <div class="result-value" id="resultValue">0 MAD</div>
+                <button type="button" class="copy-btn" id="copyBtn">
+                    📋 Copier le résultat
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Charger les options validées par le modèle
+        async function loadOptions() {
+            try {
+                const response = await fetch('/options');
+                const data = await response.json();
+
+                const populateSelect = (id, options, defaultVal) => {
+                    const select = document.getElementById(id);
+                    select.innerHTML = '';
+                    options.forEach(opt => {
+                        const option = document.createElement('option');
+                        option.value = opt;
+                        option.textContent = opt;
+                        if (opt === defaultVal) option.selected = true;
+                        select.appendChild(option);
+                    });
+                };
+
+                populateSelect('gender', data.genders, 'Male');
+                populateSelect('education_level', data.education_levels, "Master's");
+                populateSelect('job_title', data.job_titles, 'Senior Data Scientist');
+            } catch (error) {
+                console.error("Erreur chargement options:", error);
+            }
+        }
+
+        // Gérer la soumission du formulaire
+        document.getElementById('predictForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const btnText = document.getElementById('btnText');
+            const btnLoader = document.getElementById('btnLoader');
+            const resultCard = document.getElementById('resultCard');
+            const resultValue = document.getElementById('resultValue');
+            const errorBox = document.getElementById('errorBox');
+
+            // Animation bouton
+            btnText.style.display = 'none';
+            btnLoader.style.display = 'flex';
+            errorBox.style.display = 'none';
+
+            // Hide result card smoothly if it was already showing
+            resultCard.classList.remove('show');
+            setTimeout(() => {
+                resultCard.style.display = 'none';
+            }, 300);
+
+            const payload = {
+                age: parseInt(document.getElementById('age').value),
+                gender: document.getElementById('gender').value,
+                education_level: document.getElementById('education_level').value,
+                job_title: document.getElementById('job_title').value,
+                years_of_experience: parseFloat(document.getElementById('years_of_experience').value)
+            };
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const currencyChoice = document.getElementById('currency').value;
+                    let displaySalary = data.predicted_salary;
+                    let displayCurrency = 'USD';
+                    let locale = 'en-US';
+
+                    if (currencyChoice === 'MAD') {
+                        displaySalary = data.predicted_salary * 10.0; // Conversion approx
+                        displayCurrency = 'MAD';
+                        locale = 'fr-MA';
+                    } else if (currencyChoice === 'EUR') {
+                        displaySalary = data.predicted_salary * 0.95; // Conversion approx
+                        displayCurrency = 'EUR';
+                        locale = 'fr-FR';
+                    }
+
+                    // Display card text immediately but with animation
+                    setTimeout(() => {
+                        resultCard.style.display = 'block';
+                        // Force reflow
+                        void resultCard.offsetWidth;
+                        resultCard.classList.add('show');
+
+                        // Animation pour le compteur (effet smooth)
+                        let currentVal = 0;
+                        const duration = 1200;
+                        const frames = 60;
+                        const increment = displaySalary / frames;
+                        const stepTime = duration / frames;
+
+                        let counter = 0;
+                        const timer = setInterval(() => {
+                            currentVal += increment;
+                            counter++;
+
+                            if (counter >= frames) {
+                                currentVal = displaySalary;
+                                clearInterval(timer);
+                            }
+
+                            const formattedSalary = new Intl.NumberFormat(locale, {
+                                style: 'currency',
+                                currency: displayCurrency,
+                                maximumFractionDigits: 0
+                            }).format(currentVal);
+
+                            resultValue.textContent = formattedSalary;
+                        }, stepTime);
+                    }, 300);
+
+                } else {
+                    errorBox.textContent = data.detail || "Erreur de prédiction";
+                    errorBox.style.display = 'flex';
+                }
+            } catch (error) {
+                errorBox.textContent = "Erreur de connexion au serveur.";
+                errorBox.style.display = 'flex';
+            } finally {
+                btnText.style.display = 'block';
+                btnLoader.style.display = 'none';
+            }
+        });
+
+        // Gestion du bouton Réinitialiser
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            document.getElementById('resultCard').classList.remove('show');
+            setTimeout(() => {
+                document.getElementById('resultCard').style.display = 'none';
+            }, 300);
+            document.getElementById('errorBox').style.display = 'none';
+        });
+
+        // Gestion du bouton Copier
+        document.getElementById('copyBtn').addEventListener('click', () => {
+            const val = document.getElementById('resultValue').innerText;
+            navigator.clipboard.writeText(val).then(() => {
+                const btn = document.getElementById('copyBtn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '✅ Copié !';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('Erreur lors de la copie', err);
+            });
+        });
+
+        // Initialize
+        loadOptions();
+    </script>
+</body>
+
+</html>
